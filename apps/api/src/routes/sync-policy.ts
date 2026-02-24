@@ -3,6 +3,19 @@ import { PrismaClient } from "@prisma/client";
 
 type SyncPolicyRole = "super_admin" | "landlord" | "tenant";
 type SyncPolicyMode = "after_change" | "interval" | "hybrid";
+interface SyncPolicyRecord {
+  role: SyncPolicyRole;
+  enabled: boolean;
+  mode: SyncPolicyMode;
+  delayAfterChangeSeconds: number;
+  intervalSeconds: number;
+  retryBackoffSeconds: number;
+  maxRetryBackoffSeconds: number;
+  maxJitterSeconds: number;
+  initialHydrationOnLogin: boolean;
+  forceSyncOnLogin: boolean;
+  devShowCountdown: boolean;
+}
 
 const prisma = new PrismaClient();
 const prismaDb = prisma as any;
@@ -42,6 +55,48 @@ const normalizeBool = (value: unknown, fallback: boolean): boolean => {
   return fallback;
 };
 
+const defaultPolicyByRole: Record<SyncPolicyRole, SyncPolicyRecord> = {
+  super_admin: {
+    role: "super_admin",
+    enabled: true,
+    mode: "interval",
+    delayAfterChangeSeconds: 60,
+    intervalSeconds: 10,
+    retryBackoffSeconds: 30,
+    maxRetryBackoffSeconds: 180,
+    maxJitterSeconds: 0,
+    initialHydrationOnLogin: true,
+    forceSyncOnLogin: false,
+    devShowCountdown: true
+  },
+  landlord: {
+    role: "landlord",
+    enabled: true,
+    mode: "after_change",
+    delayAfterChangeSeconds: 60,
+    intervalSeconds: 300,
+    retryBackoffSeconds: 60,
+    maxRetryBackoffSeconds: 300,
+    maxJitterSeconds: 0,
+    initialHydrationOnLogin: true,
+    forceSyncOnLogin: false,
+    devShowCountdown: true
+  },
+  tenant: {
+    role: "tenant",
+    enabled: true,
+    mode: "after_change",
+    delayAfterChangeSeconds: 60,
+    intervalSeconds: 300,
+    retryBackoffSeconds: 60,
+    maxRetryBackoffSeconds: 300,
+    maxJitterSeconds: 0,
+    initialHydrationOnLogin: true,
+    forceSyncOnLogin: false,
+    devShowCountdown: true
+  }
+};
+
 const requireSuperAdmin = async (req: Request, res: Response): Promise<string | undefined> => {
   const actorId = typeof req.header("x-colonus-user-id") === "string" ? req.header("x-colonus-user-id") : "";
   if (!actorId) {
@@ -73,7 +128,15 @@ router.get("/api/sync/policy", async (_req: Request, res: Response): Promise<voi
     });
     res.status(200).json({ policies });
   } catch (error) {
-    handleRouteError(res, error, "GET /api/sync/policy");
+    console.warn("[sync-policy] Falling back to defaults for GET /api/sync/policy");
+    console.error("[sync-policy] GET /api/sync/policy", error);
+    res.status(200).json({
+      policies: [
+        defaultPolicyByRole.super_admin,
+        defaultPolicyByRole.landlord,
+        defaultPolicyByRole.tenant
+      ]
+    });
   }
 });
 
@@ -87,11 +150,18 @@ router.get("/api/sync/policy/:role", async (req: Request, res: Response): Promis
     }
     const policy = await prismaDb.syncPolicy.findUnique({ where: { role } });
     if (!policy) {
-      res.status(404).json({ error: "Policy not found." });
+      res.status(200).json({ policy: defaultPolicyByRole[role] });
       return;
     }
-    res.status(200).json({ policy });
+    res.status(200).json({ policy: { ...defaultPolicyByRole[role], ...policy } });
   } catch (error) {
+    const role = normalizeRole(req.params.role);
+    if (role) {
+      console.warn(`[sync-policy] Falling back to defaults for GET /api/sync/policy/${role}`);
+      console.error("[sync-policy] GET /api/sync/policy/:role", error);
+      res.status(200).json({ policy: defaultPolicyByRole[role] });
+      return;
+    }
     handleRouteError(res, error, "GET /api/sync/policy/:role");
   }
 });

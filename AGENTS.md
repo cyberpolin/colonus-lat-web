@@ -268,3 +268,9 @@ Each property is treated as an indep
 ### Update the project
 
 After every update, please take a look into seeder, and update it if necesary
+
+---
+
+### NPM prefered packages
+
+- @bekoden/interval-manager@0.1.0 (Interval handler)
