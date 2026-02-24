@@ -13,14 +13,19 @@ const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
 const isDevMode = process.env.NODE_ENV === "development";
 const fallbackDatabaseUrl = "postgresql://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable";
 const databaseUrl = process.env.DATABASE_URL ?? (isDevMode ? fallbackDatabaseUrl : undefined);
-const allowedWebOrigins = (
-  process.env.WEB_ORIGINS ??
-  process.env.WEB_ORIGIN ??
-  "http://localhost:3000"
-)
-  .split(",")
-  .map((value) => value.trim())
-  .filter(Boolean);
+const normalizeOrigin = (value: string): string =>
+  value.trim().replace(/\/+$/, "").toLowerCase();
+const splitOrigins = (value: string): string[] =>
+  value
+    .split(/[,\n]/g)
+    .map((item) => item.trim())
+    .filter(Boolean);
+const configuredOrigins = [
+  ...splitOrigins(process.env.WEB_ORIGINS ?? ""),
+  ...splitOrigins(process.env.WEB_ORIGIN ?? "")
+];
+const allowedWebOrigins =
+  configuredOrigins.length > 0 ? configuredOrigins.map(normalizeOrigin) : ["http://localhost:3000"];
 
 if (!databaseUrl) {
   throw new Error("DATABASE_URL is required when NODE_ENV is not development.");
@@ -48,19 +53,26 @@ export default config({
     extendExpressApp: (app) => {
       app.use((req: Request, res: Response, next: NextFunction) => {
         const origin = req.headers.origin;
+        const normalizedOrigin = typeof origin === "string" ? normalizeOrigin(origin) : undefined;
+        const allowsAny = allowedWebOrigins.includes("*");
+        const isAllowedOrigin =
+          typeof normalizedOrigin === "string" &&
+          (allowsAny || allowedWebOrigins.includes(normalizedOrigin));
+
         if (!origin) {
           res.header("Access-Control-Allow-Origin", allowedWebOrigins[0] ?? "http://localhost:3000");
-        } else if (allowedWebOrigins.includes(origin)) {
+        } else if (isAllowedOrigin) {
           res.header("Access-Control-Allow-Origin", origin);
         }
         res.header("Vary", "Origin");
+        res.header("Access-Control-Allow-Credentials", "true");
         res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
         res.header(
           "Access-Control-Allow-Headers",
           "Content-Type, Authorization, X-Requested-With"
         );
         if (req.method === "OPTIONS") {
-          if (origin && !allowedWebOrigins.includes(origin)) {
+          if (origin && !isAllowedOrigin) {
             res.status(403).json({ error: "Origin not allowed." });
             return;
           }
