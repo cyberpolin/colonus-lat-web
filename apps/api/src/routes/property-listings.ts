@@ -4,6 +4,12 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const prismaDb = prisma as any;
 const router = express.Router();
+const handleRouteError = (res: Response, error: unknown, context: string): void => {
+  console.error(`[property-listings] ${context}`, error);
+  if (!res.headersSent) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
 
 const toSafeSegment = (value: string): string =>
   value
@@ -290,79 +296,87 @@ router.put(
 router.get(
   "/api/public/listings",
   async (req: Request, res: Response): Promise<void> => {
-    const q = normalizeText(req.query.q);
-    const minRentCents = normalizeInt(req.query.minRentCents, 0);
-    const maxRentCents = normalizeInt(req.query.maxRentCents, 0);
-    const minBeds = normalizeInt(req.query.minBeds, 0);
+    try {
+      const q = normalizeText(req.query.q);
+      const minRentCents = normalizeInt(req.query.minRentCents, 0);
+      const maxRentCents = normalizeInt(req.query.maxRentCents, 0);
+      const minBeds = normalizeInt(req.query.minBeds, 0);
 
-    const listings = await prismaDb.publicPropertyListing.findMany({
-      where: {
-        isAvailable: true,
-        isOffered: true,
-        ...(minRentCents > 0 ? { monthlyRentCents: { gte: minRentCents } } : {}),
-        ...(maxRentCents > 0 ? { monthlyRentCents: { lte: maxRentCents } } : {}),
-        ...(minBeds > 0 ? { bedrooms: { gte: minBeds } } : {}),
-        ...(q
-          ? {
-              OR: [
-                { propertyName: { contains: q } },
-                { address: { contains: q } },
-                { headline: { contains: q } },
-                { description: { contains: q } }
-              ]
-            }
-          : {})
-      },
-      orderBy: { updatedAt: "desc" }
-    });
+      const listings = await prismaDb.publicPropertyListing.findMany({
+        where: {
+          isAvailable: true,
+          isOffered: true,
+          ...(minRentCents > 0 ? { monthlyRentCents: { gte: minRentCents } } : {}),
+          ...(maxRentCents > 0 ? { monthlyRentCents: { lte: maxRentCents } } : {}),
+          ...(minBeds > 0 ? { bedrooms: { gte: minBeds } } : {}),
+          ...(q
+            ? {
+                OR: [
+                  { propertyName: { contains: q } },
+                  { address: { contains: q } },
+                  { headline: { contains: q } },
+                  { description: { contains: q } }
+                ]
+              }
+            : {})
+        },
+        orderBy: { updatedAt: "desc" }
+      });
 
-    res.status(200).json({ listings });
+      res.status(200).json({ listings });
+    } catch (error) {
+      handleRouteError(res, error, "GET /api/public/listings");
+    }
   }
 );
 
 router.get(
   "/api/public/listings/:listingSlug",
   async (req: Request, res: Response): Promise<void> => {
-    const listingSlug = normalizeText(req.params.listingSlug);
-    if (!listingSlug) {
-      res.status(400).json({ error: "Missing listingSlug." });
-      return;
-    }
-    const listing = await prismaDb.publicPropertyListing.findUnique({
-      where: { slug: listingSlug }
-    });
-    if (!listing || !listing.isAvailable || !listing.isOffered) {
-      res.status(404).json({ error: "Listing not found." });
-      return;
-    }
-    const orConditions: Array<Record<string, unknown>> = [];
-    if (listing.landlordId) {
-      orConditions.push({ landlordId: listing.landlordId });
-    }
-    if (Number.isFinite(listing.bedrooms) && listing.bedrooms > 0) {
-      orConditions.push({ bedrooms: listing.bedrooms });
-    }
-    if (Number.isFinite(listing.monthlyRentCents) && listing.monthlyRentCents > 0) {
-      const delta = Math.max(25000, Math.round(listing.monthlyRentCents * 0.2));
-      orConditions.push({
-        monthlyRentCents: {
-          gte: Math.max(0, listing.monthlyRentCents - delta),
-          lte: listing.monthlyRentCents + delta
-        }
+    try {
+      const listingSlug = normalizeText(req.params.listingSlug);
+      if (!listingSlug) {
+        res.status(400).json({ error: "Missing listingSlug." });
+        return;
+      }
+      const listing = await prismaDb.publicPropertyListing.findUnique({
+        where: { slug: listingSlug }
       });
-    }
-    const relatedListings = await prismaDb.publicPropertyListing.findMany({
-      where: {
-        id: { not: listing.id },
-        isAvailable: true,
-        isOffered: true,
-        ...(orConditions.length > 0 ? { OR: orConditions } : {})
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 6
-    });
+      if (!listing || !listing.isAvailable || !listing.isOffered) {
+        res.status(404).json({ error: "Listing not found." });
+        return;
+      }
+      const orConditions: Array<Record<string, unknown>> = [];
+      if (listing.landlordId) {
+        orConditions.push({ landlordId: listing.landlordId });
+      }
+      if (Number.isFinite(listing.bedrooms) && listing.bedrooms > 0) {
+        orConditions.push({ bedrooms: listing.bedrooms });
+      }
+      if (Number.isFinite(listing.monthlyRentCents) && listing.monthlyRentCents > 0) {
+        const delta = Math.max(25000, Math.round(listing.monthlyRentCents * 0.2));
+        orConditions.push({
+          monthlyRentCents: {
+            gte: Math.max(0, listing.monthlyRentCents - delta),
+            lte: listing.monthlyRentCents + delta
+          }
+        });
+      }
+      const relatedListings = await prismaDb.publicPropertyListing.findMany({
+        where: {
+          id: { not: listing.id },
+          isAvailable: true,
+          isOffered: true,
+          ...(orConditions.length > 0 ? { OR: orConditions } : {})
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 6
+      });
 
-    res.status(200).json({ listing, relatedListings });
+      res.status(200).json({ listing, relatedListings });
+    } catch (error) {
+      handleRouteError(res, error, "GET /api/public/listings/:listingSlug");
+    }
   }
 );
 

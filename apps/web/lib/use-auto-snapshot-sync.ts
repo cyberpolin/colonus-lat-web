@@ -254,6 +254,18 @@ export const useAutoSnapshotSync = (): void => {
   const reset = useSyncStatusStore((store) => store.reset);
 
   useEffect(() => {
+    const hostname = typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    const isPublicWebsiteHost =
+      hostname === "propiedades.colonus.lat" ||
+      hostname === "www.colonus.lat" ||
+      hostname === "colonus.lat";
+    const isPublicWebsitePath = pathname === "/" || pathname.startsWith("/website") || pathname.startsWith("/available-units");
+    if (isPublicWebsiteHost || isPublicWebsitePath) {
+      reset();
+      return;
+    }
+
     let mounted = true;
     const readRaw = (key: string): string => window.localStorage.getItem(key) ?? "";
     const getSyncFingerprint = (): string =>

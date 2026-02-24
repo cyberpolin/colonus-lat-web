@@ -7,6 +7,12 @@ type SyncPolicyMode = "after_change" | "interval" | "hybrid";
 const prisma = new PrismaClient();
 const prismaDb = prisma as any;
 const router = express.Router();
+const handleRouteError = (res: Response, error: unknown, context: string): void => {
+  console.error(`[sync-policy] ${context}`, error);
+  if (!res.headersSent) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
 
 const jsonHeaders = (res: Response): void => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -61,25 +67,33 @@ router.options("/api/sync/policy/:role", (_req: Request, res: Response) => {
 
 router.get("/api/sync/policy", async (_req: Request, res: Response): Promise<void> => {
   jsonHeaders(res);
-  const policies = await prismaDb.syncPolicy.findMany({
-    orderBy: { role: "asc" }
-  });
-  res.status(200).json({ policies });
+  try {
+    const policies = await prismaDb.syncPolicy.findMany({
+      orderBy: { role: "asc" }
+    });
+    res.status(200).json({ policies });
+  } catch (error) {
+    handleRouteError(res, error, "GET /api/sync/policy");
+  }
 });
 
 router.get("/api/sync/policy/:role", async (req: Request, res: Response): Promise<void> => {
   jsonHeaders(res);
-  const role = normalizeRole(req.params.role);
-  if (!role) {
-    res.status(400).json({ error: "Invalid role." });
-    return;
+  try {
+    const role = normalizeRole(req.params.role);
+    if (!role) {
+      res.status(400).json({ error: "Invalid role." });
+      return;
+    }
+    const policy = await prismaDb.syncPolicy.findUnique({ where: { role } });
+    if (!policy) {
+      res.status(404).json({ error: "Policy not found." });
+      return;
+    }
+    res.status(200).json({ policy });
+  } catch (error) {
+    handleRouteError(res, error, "GET /api/sync/policy/:role");
   }
-  const policy = await prismaDb.syncPolicy.findUnique({ where: { role } });
-  if (!policy) {
-    res.status(404).json({ error: "Policy not found." });
-    return;
-  }
-  res.status(200).json({ policy });
 });
 
 router.post("/api/sync/policy/:role", express.json(), async (req: Request, res: Response): Promise<void> => {
