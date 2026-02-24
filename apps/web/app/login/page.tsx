@@ -82,43 +82,45 @@ export default function LoginPage() {
             {isSigningIn ? "Signing In..." : "Sign In"}
           </button>
         </form>
-        <section id="login-dev-legend-card" className="mt-4 rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-          <p className="font-semibold uppercase tracking-wider text-slate-600">Dev Login Legend</p>
-          <p className="mt-2">Password (all): <span className="font-medium">demo123</span></p>
-          <div className="mt-2 space-y-1">
-            <p>Super Admin: <span className="font-medium">demo.admin@colonus.lat</span></p>
-            <p>Landlord: <span className="font-medium">demo3@colonus.lat</span></p>
-            <p>Tenant: <span className="font-medium">tenant.demo3@colonus.lat</span></p>
-          </div>
-          <button
-            type="button"
-            onClick={async () => {
-              setIsSeedingDevData(true);
-              try {
-                if (typeof window !== "undefined") {
-                  const keys = Object.keys(window.localStorage);
-                  keys
-                    .filter((key) => key.startsWith("COLONUS_"))
-                    .forEach((key) => window.localStorage.removeItem(key));
+        {isDevMode && (
+          <section id="login-dev-legend-card" className="mt-4 rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            <p className="font-semibold uppercase tracking-wider text-slate-600">Dev Login Legend</p>
+            <p className="mt-2">Password (all): <span className="font-medium">demo123</span></p>
+            <div className="mt-2 space-y-1">
+              <p>Super Admin: <span className="font-medium">demo.admin@colonus.lat</span></p>
+              <p>Landlord: <span className="font-medium">demo3@colonus.lat</span></p>
+              <p>Tenant: <span className="font-medium">tenant.demo3@colonus.lat</span></p>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                setIsSeedingDevData(true);
+                try {
+                  if (typeof window !== "undefined") {
+                    const keys = Object.keys(window.localStorage);
+                    keys
+                      .filter((key) => key.startsWith("COLONUS_"))
+                      .forEach((key) => window.localStorage.removeItem(key));
+                  }
+                  await seedFakeData();
+                  setError(undefined);
+                } catch (seedError) {
+                  setError(
+                    seedError instanceof Error
+                      ? `Seed failed: ${seedError.message}`
+                      : "Seed failed. Check API server connection."
+                  );
+                } finally {
+                  setIsSeedingDevData(false);
                 }
-                await seedFakeData();
-                setError(undefined);
-              } catch (seedError) {
-                setError(
-                  seedError instanceof Error
-                    ? `Seed failed: ${seedError.message}`
-                    : "Seed failed. Check API server connection."
-                );
-              } finally {
-                setIsSeedingDevData(false);
-              }
-            }}
-            disabled={isSeedingDevData}
-            className="mt-3 rounded border border-slate-300 bg-white px-3 py-1 text-xs text-slate-700 hover:border-slate-500"
-          >
-            {isSeedingDevData ? "Seeding..." : "Seed Fake Data (Dev)"}
-          </button>
-        </section>
+              }}
+              disabled={isSeedingDevData}
+              className="mt-3 rounded border border-slate-300 bg-white px-3 py-1 text-xs text-slate-700 hover:border-slate-500"
+            >
+              {isSeedingDevData ? "Seeding..." : "Seed Fake Data (Dev)"}
+            </button>
+          </section>
+        )}
       </section>
     </Main>
   );
