@@ -604,9 +604,9 @@ export const ensureProductionSeed = async (context: KeystoneDbContext): Promise<
       }
     ] as const;
 
-    await Promise.all(
-      events.map((event, index) =>
-        sudoContext.db.SyncEvent.createOne({
+    try {
+      for (const [index, event] of events.entries()) {
+        await sudoContext.db.SyncEvent.createOne({
           data: {
             actor: { connect: { id: superAdminUser.id } },
             kind: event.kind,
@@ -617,8 +617,17 @@ export const ensureProductionSeed = async (context: KeystoneDbContext): Promise<
             errorMessage: event.errorMessage,
             createdAt: event.createdAt
           }
-        })
-      )
-    );
+        });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("SyncEventKindType") && message.includes("does not exist")) {
+        console.warn(
+          "[seed] Skipping production SyncEvent seed because DB enum types are not available yet."
+        );
+      } else {
+        throw error;
+      }
+    }
   }
 };
