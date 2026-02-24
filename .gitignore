@@ -1,0 +1,47 @@
+# Package managers / dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs / caches
+.next/
+dist/
+build/
+coverage/
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files (keep examples)
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Vercel / editor / OS
+.vercel/
+.DS_Store
+.idea/
+.vscode/
+
+# Runtime temp / local data
+tmp/
+temp/
+*.pid
+
+# Keystone / local DB artifacts
+apps/api/keystone.db
+apps/api/keystone.db-*
+apps/api/data/
+apps/api/.keystone/
+apps/api/schema.graphql
+apps/api/schema.prisma
+
+# Next local artifacts
+apps/web/.next/

@@ -1,0 +1,17 @@
+{
+  "name": "colonus",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm --filter @colonus/web dev",
+    "dev:api": "pnpm --filter @colonus/api dev",
+    "dev:all": "node ./scripts/dev-all.mjs",
+    "dev:all:raw": "pnpm --parallel --filter @colonus/web --filter @colonus/api dev",
+    "build": "pnpm --filter @colonus/web build",
+    "build:api": "pnpm --filter @colonus/api build",
+    "lint": "pnpm --filter @colonus/web lint",
+    "typecheck": "pnpm --filter @colonus/web typecheck",
+    "typecheck:api": "pnpm --filter @colonus/api typecheck",
+    "test": "echo \"No tests yet\""
+  }
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" fill="none">
+  <rect width="640" height="480" fill="#e2e8f0"/>
+  <rect x="64" y="72" width="512" height="336" rx="20" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+  <path d="M160 324l72-88 64 72 48-56 136 72H160z" fill="#94a3b8"/>
+  <circle cx="248" cy="176" r="30" fill="#cbd5e1"/>
+  <text x="320" y="390" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="20">Proof Image Placeholder</text>
+</svg>

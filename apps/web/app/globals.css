@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --line: #e2e8f0;
+  --text: #0f172a;
+  --muted: #475569;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(140deg, #f8fafc 0%, #eef2f7 55%, #e2e8f0 100%);
+  color: var(--text);
+  font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
+}
+
+#app-theme-shell {
+  min-height: 100vh;
+  --theme-hue: 0deg;
+  --theme-rgb: 100 116 139;
+  position: relative;
+  isolation: isolate;
+  filter: hue-rotate(var(--theme-hue)) saturate(1.14);
+  transition: filter 220ms ease, background 180ms ease;
+}
+
+#app-theme-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    1200px 700px at 20% -10%,
+    rgb(var(--theme-rgb) / 0.18) 0%,
+    rgb(var(--theme-rgb) / 0.08) 35%,
+    transparent 70%
+  );
+}
+
+#app-theme-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+#app-theme-shell:has(#main-menu-banner) [data-colonus-page-header="true"] {
+  margin-top: 3.5rem;
+}

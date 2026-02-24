@@ -1,0 +1,35 @@
+{
+  "super_admin": {
+    "title": "Super Admin Menu",
+    "items": [
+      { "id": "dashboard", "label": "Dashboard", "type": "link", "href": "/superadmin" },
+      { "id": "add-client", "label": "Add Client", "type": "link", "href": "/superadmin/add-client", "badge": "draft" },
+      { "id": "landlord-clients", "label": "Landlord Clients", "type": "link", "href": "/superadmin/clients" },
+      { "id": "sync-settings", "label": "Sync Settings", "type": "link", "href": "/superadmin/sync-settings" },
+      { "id": "ui-system", "label": "UI System", "type": "link", "href": "/ui-system" },
+      { "id": "seed-fake", "label": "Seed Fake", "type": "action", "action": "seedFake" },
+      { "id": "clear-db", "label": "Clear DB", "type": "action", "action": "clearDatabase" },
+      { "id": "logout", "label": "Log Out", "type": "link", "href": "/goodbye" }
+    ]
+  },
+  "landlord": {
+    "title": "Landlord Menu",
+    "items": [
+      { "id": "dashboard", "label": "Dashboard", "type": "link", "href": "/landlord" },
+      { "id": "tenants", "label": "Tenants", "type": "link", "href": "/landlord/tenants" },
+      { "id": "properties", "label": "Properties", "type": "link", "href": "/landlord/properties" },
+      { "id": "listings", "label": "Listings", "type": "link", "href": "/landlord/listings" },
+      { "id": "ui-system", "label": "UI System", "type": "link", "href": "/ui-system" },
+      { "id": "logout", "label": "Log Out", "type": "link", "href": "/goodbye" }
+    ]
+  },
+  "tenant": {
+    "title": "Tenant Menu",
+    "items": [
+      { "id": "dashboard", "label": "Dashboard", "type": "link", "href": "/tenant" },
+      { "id": "plans", "label": "Plans", "type": "link", "href": "/landingPage" },
+      { "id": "ui-system", "label": "UI System", "type": "link", "href": "/ui-system" },
+      { "id": "logout", "label": "Log Out", "type": "link", "href": "/goodbye" }
+    ]
+  }
+}

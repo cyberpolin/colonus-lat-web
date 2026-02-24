@@ -1,0 +1,27 @@
+{
+  "name": "@colonus/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "node ./scripts/fix-keystone-static.cjs",
+    "dev": "keystone dev --config keystone.ts",
+    "build": "keystone build --config keystone.ts",
+    "start": "keystone start --config keystone.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@keystone-6/core": "^6.3.0",
+    "@prisma/client": "5.22.0",
+    "cloudinary": "^2.5.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "22.10.2",
+    "prisma": "5.22.0",
+    "typescript": "5.7.2"
+  }
+}
