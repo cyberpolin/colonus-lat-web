@@ -41,7 +41,6 @@ apps/api/keystone.db-*
 apps/api/data/
 apps/api/.keystone/
 apps/api/schema.graphql
-apps/api/schema.prisma
 
 # Next local artifacts
 apps/web/.next/
