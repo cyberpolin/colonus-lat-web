@@ -26,7 +26,7 @@ export default function LoginPage() {
     >
       <section id="login-main-card" className="rounded-2xl rounded-t-none border border-slate-200 bg-white p-6 shadow-sm">
         <form
-          className="mt-4 space-y-3"
+          className="mt-5 space-y-4"
           onSubmit={async (event) => {
             event.preventDefault();
             if (isDevMode && isSeedingDevData) {
@@ -56,28 +56,40 @@ export default function LoginPage() {
             }
           }}
         >
-          <Input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Email"
-            disabled={(isDevMode && isSeedingDevData) || isSigningIn}
-            className="w-full rounded border border-slate-300 p-2"
-          />
-          <Input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Password"
-            disabled={(isDevMode && isSeedingDevData) || isSigningIn}
-            className="w-full rounded border border-slate-300 p-2"
-          />
+          <div className="space-y-1.5">
+            <label htmlFor="login-email" className="text-xs font-medium uppercase tracking-wide text-slate-600">
+              Email
+            </label>
+            <Input
+              id="login-email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="name@example.com"
+              disabled={(isDevMode && isSeedingDevData) || isSigningIn}
+              className="w-full rounded border border-slate-300 p-2"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="login-password" className="text-xs font-medium uppercase tracking-wide text-slate-600">
+              Password
+            </label>
+            <Input
+              id="login-password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Your password"
+              disabled={(isDevMode && isSeedingDevData) || isSigningIn}
+              className="w-full rounded border border-slate-300 p-2"
+            />
+          </div>
           {error && <p className="text-xs text-slate-700">{error}</p>}
-          <p className="text-xs text-slate-500">Demo password: demo123</p>
+          {isDevMode && <p className="text-xs text-slate-500">Demo password: demo123</p>}
           <button
             type="submit"
             disabled={(isDevMode && isSeedingDevData) || isSigningIn}
-            className="w-full rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60"
+            className="mt-1 w-full rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60"
           >
             {isSigningIn ? "Signing In..." : "Sign In"}
           </button>
