@@ -12,9 +12,12 @@ import { ensureInitialSeed } from "./src/seed";
 const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
 const isDevMode = process.env.NODE_ENV === "development";
-const databaseUrl =
-  process.env.DATABASE_URL ??
-  "postgresql://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable";
+const fallbackDatabaseUrl = "postgresql://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable";
+const databaseUrl = process.env.DATABASE_URL ?? (isDevMode ? fallbackDatabaseUrl : undefined);
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is required when NODE_ENV is not development.");
+}
 
 export default config({
   db: {
