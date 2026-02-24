@@ -35,7 +35,11 @@ export default config({
         await ensureInitialSeed(context as unknown as Parameters<typeof ensureInitialSeed>[0]);
         return;
       }
-      await ensureProductionSeed(context as unknown as Parameters<typeof ensureProductionSeed>[0]);
+      try {
+        await ensureProductionSeed(context as unknown as Parameters<typeof ensureProductionSeed>[0]);
+      } catch (error) {
+        console.error("[seed] Production bootstrap seed failed:", error);
+      }
     }
   },
   lists,

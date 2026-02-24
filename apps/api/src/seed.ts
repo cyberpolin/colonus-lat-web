@@ -518,7 +518,6 @@ export const ensureProductionSeed = async (context: KeystoneDbContext): Promise<
 
   await sudoContext.db.PublicPropertyListing.createOne({
     data: {
-      landlord: { connect: { id: superAdminUser.id } },
       sourcePropertyId: listingSourcePropertyId,
       slug: listingSlug,
       propertyName: "Departamento Centro",
