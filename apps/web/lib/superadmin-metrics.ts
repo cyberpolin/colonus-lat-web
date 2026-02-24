@@ -1,9 +1,9 @@
-import type { ColonusState, SyncMutation } from "@colonus/shared";
+import { createScopedStorageKey, type ColonusState, type SyncMutation } from "@colonus/shared";
 
 const FREE_SYNC_DAILY_LIMIT = 10;
 const UNLIMITED_PLAN_PRICE_CENTS = 1000;
 const STORAGE_COST_PER_GB_USD = 0.023;
-const METRICS_SNAPSHOT_STORAGE_KEY = "COLONUS_SUPERADMIN_METRICS_DAILY";
+const METRICS_SNAPSHOT_STORAGE_KEY = createScopedStorageKey("COLONUS_SUPERADMIN_METRICS_DAILY");
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
 

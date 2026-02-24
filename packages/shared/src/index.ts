@@ -1,6 +1,6 @@
 export const STORAGE_VERSION = 8;
 
-export const STORAGE_KEYS = {
+export const LEGACY_STORAGE_KEYS = {
   version: "COLONUS_STORAGE_VERSION",
   state: "COLONUS_APP_STATE",
   outbox: "COLONUS_OUTBOX",
@@ -9,6 +9,44 @@ export const STORAGE_KEYS = {
   syncMeta: "COLONUS_SYNC_META",
   syncPolicyCache: "COLONUS_SYNC_POLICY_CACHE"
 } as const;
+
+const normalizeStorageScope = (input: string): string =>
+  input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "") || "default";
+
+export const getStorageScope = (): string => {
+  if (typeof window !== "undefined" && window.location?.host) {
+    return normalizeStorageScope(window.location.host);
+  }
+
+  const configuredScope =
+    process.env.NEXT_PUBLIC_STORAGE_SCOPE ??
+    process.env.COLONUS_STORAGE_SCOPE ??
+    process.env.NODE_ENV;
+  return normalizeStorageScope(configuredScope ?? "default");
+};
+
+export const createScopedStorageKey = (
+  baseKey: string,
+  scope: string = getStorageScope()
+): string => {
+  if (!baseKey.startsWith("COLONUS_")) return `COLONUS_${scope}_${baseKey}`;
+  const suffix = baseKey.slice("COLONUS_".length);
+  return `COLONUS_${scope}_${suffix}`;
+};
+
+export const getStorageKeys = (scope?: string) => ({
+  version: createScopedStorageKey(LEGACY_STORAGE_KEYS.version, scope),
+  state: createScopedStorageKey(LEGACY_STORAGE_KEYS.state, scope),
+  outbox: createScopedStorageKey(LEGACY_STORAGE_KEYS.outbox, scope),
+  tenantGrades: createScopedStorageKey(LEGACY_STORAGE_KEYS.tenantGrades, scope),
+  changeLog: createScopedStorageKey(LEGACY_STORAGE_KEYS.changeLog, scope),
+  syncMeta: createScopedStorageKey(LEGACY_STORAGE_KEYS.syncMeta, scope),
+  syncPolicyCache: createScopedStorageKey(LEGACY_STORAGE_KEYS.syncPolicyCache, scope)
+});
 
 export const PROOF_IMAGE_PLACEHOLDER_URL = "/placeholders/proof-image.svg";
 

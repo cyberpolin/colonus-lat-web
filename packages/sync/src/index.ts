@@ -1,4 +1,7 @@
-import { STORAGE_KEYS, type SyncMutation } from "@colonus/shared";
+import {
+  getStorageKeys,
+  type SyncMutation
+} from "@colonus/shared";
 
 const MAX_RETRIES = 5;
 export interface ChangeLogEntry {
@@ -9,7 +12,7 @@ export interface ChangeLogEntry {
 
 const readOutbox = (): SyncMutation[] => {
   if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(STORAGE_KEYS.outbox);
+  const raw = window.localStorage.getItem(getStorageKeys().outbox);
   if (!raw) return [];
 
   try {
@@ -22,12 +25,12 @@ const readOutbox = (): SyncMutation[] => {
 
 const writeOutbox = (queue: SyncMutation[]): void => {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEYS.outbox, JSON.stringify(queue));
+  window.localStorage.setItem(getStorageKeys().outbox, JSON.stringify(queue));
 };
 
 const readChangeLog = (): ChangeLogEntry[] => {
   if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(STORAGE_KEYS.changeLog);
+  const raw = window.localStorage.getItem(getStorageKeys().changeLog);
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as ChangeLogEntry[];
@@ -39,7 +42,7 @@ const readChangeLog = (): ChangeLogEntry[] => {
 
 const writeChangeLog = (entries: ChangeLogEntry[]): void => {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEYS.changeLog, JSON.stringify(entries));
+  window.localStorage.setItem(getStorageKeys().changeLog, JSON.stringify(entries));
 };
 
 const appendChangeLogEntry = (mutation: SyncMutation): void => {

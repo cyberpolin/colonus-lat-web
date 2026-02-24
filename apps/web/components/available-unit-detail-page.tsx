@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { createScopedStorageKey } from "@colonus/shared";
 import { Input } from "@/components/ui/input";
 import { Main } from "@/components/ui/main";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +17,7 @@ interface AvailableUnitDetailPageProps {
   listingSlug: string;
 }
 
-const REQUESTED_UNITS_STORAGE_KEY = "COLONUS_REQUESTED_UNITS";
+const REQUESTED_UNITS_STORAGE_KEY = createScopedStorageKey("COLONUS_REQUESTED_UNITS");
 
 export function AvailableUnitDetailPage({ listingSlug }: AvailableUnitDetailPageProps) {
   const [listing, setListing] = useState<PublicPropertyListing>();

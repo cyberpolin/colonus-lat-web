@@ -37,6 +37,12 @@ interface KeystoneDbContext {
           data: Record<string, unknown>;
         }) => Promise<{ id: string }>;
       };
+      SyncEvent: {
+        findMany: (args?: {
+          query?: string;
+        }) => Promise<Array<{ id: string; clientSessionId?: string; actor?: { id?: string } }>>;
+        createOne: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
+      };
     };
   };
 }
@@ -537,8 +543,82 @@ export const ensureProductionSeed = async (context: KeystoneDbContext): Promise<
       where: { id: existingListing.id },
       data: listingData
     });
-    return;
+  } else {
+    await sudoContext.db.PublicPropertyListing.createOne({ data: listingData });
   }
 
-  await sudoContext.db.PublicPropertyListing.createOne({ data: listingData });
+  const seedSessionPrefix = "prod-seed-session";
+  const existingSyncEvents = await sudoContext.db.SyncEvent.findMany({
+    query: "id clientSessionId actor { id }"
+  });
+  const hasProductionSeedEvents = existingSyncEvents.some(
+    (event) =>
+      event.actor?.id === superAdminUser?.id &&
+      typeof event.clientSessionId === "string" &&
+      event.clientSessionId.startsWith(seedSessionPrefix)
+  );
+
+  if (!hasProductionSeedEvents && superAdminUser?.id) {
+    const now = new Date();
+    const baseIso = now.toISOString();
+    const events = [
+      {
+        kind: "mutation_pull",
+        status: "ok",
+        counts: { pulled: 12, applied: 12 },
+        clientStorageVersion: "8",
+        errorMessage: "",
+        createdAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString()
+      },
+      {
+        kind: "mutation_push",
+        status: "ok",
+        counts: { pushed: 7, retried: 1 },
+        clientStorageVersion: "8",
+        errorMessage: "",
+        createdAt: new Date(now.getTime() - 22 * 60 * 1000).toISOString()
+      },
+      {
+        kind: "upload_asset",
+        status: "ok",
+        counts: { assets: 3, bytes: 824532 },
+        clientStorageVersion: "8",
+        errorMessage: "",
+        createdAt: new Date(now.getTime() - 15 * 60 * 1000).toISOString()
+      },
+      {
+        kind: "backup_db",
+        status: "ok",
+        counts: { snapshots: 1, mergedVersion: 3 },
+        clientStorageVersion: "8",
+        errorMessage: "",
+        createdAt: new Date(now.getTime() - 8 * 60 * 1000).toISOString()
+      },
+      {
+        kind: "quota_blocked",
+        status: "error",
+        counts: { blockedMutations: 2 },
+        clientStorageVersion: "8",
+        errorMessage: "Free tier sync quota reached for one client session.",
+        createdAt: baseIso
+      }
+    ] as const;
+
+    await Promise.all(
+      events.map((event, index) =>
+        sudoContext.db.SyncEvent.createOne({
+          data: {
+            actor: { connect: { id: superAdminUser.id } },
+            kind: event.kind,
+            status: event.status,
+            counts: event.counts,
+            clientSessionId: `${seedSessionPrefix}-${index + 1}`,
+            clientStorageVersion: event.clientStorageVersion,
+            errorMessage: event.errorMessage,
+            createdAt: event.createdAt
+          }
+        })
+      )
+    );
+  }
 };

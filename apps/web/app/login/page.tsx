@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { getStorageScope } from "@colonus/shared";
 import { Input } from "@/components/ui/input";
 import { Main } from "@/components/ui/main";
 import { useColonusStore } from "@/lib/store";
@@ -109,9 +110,14 @@ export default function LoginPage() {
                 setIsSeedingDevData(true);
                 try {
                   if (typeof window !== "undefined") {
+                    const scopedPrefix = `COLONUS_${getStorageScope()}_`;
                     const keys = Object.keys(window.localStorage);
                     keys
-                      .filter((key) => key.startsWith("COLONUS_"))
+                      .filter(
+                        (key) =>
+                          key.startsWith(scopedPrefix) ||
+                          /^COLONUS_[A-Z0-9_]+$/.test(key)
+                      )
                       .forEach((key) => window.localStorage.removeItem(key));
                   }
                   await seedFakeData();

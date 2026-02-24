@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { createId, type Landlord, type Tenant } from "@colonus/shared";
+import { createId, createScopedStorageKey, type Landlord, type Tenant } from "@colonus/shared";
 import { useColonusStore } from "@/lib/store";
 
-const CLIENT_DRAFT_STORAGE_KEY = "COLONUS_CLIENT_DRAFT";
+const CLIENT_DRAFT_STORAGE_KEY = createScopedStorageKey("COLONUS_CLIENT_DRAFT");
 
 export interface TemporalLandlord {
   fullName: string;

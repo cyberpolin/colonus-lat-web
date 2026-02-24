@@ -3,8 +3,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
-  STORAGE_KEYS,
   STORAGE_VERSION,
+  getStorageKeys,
   TENANT_GRADE_REASONS,
   createId,
   nowIso,
@@ -103,7 +103,7 @@ export const useTenantGradesStore = create<TenantGradesState>()(
         }))
     }),
     {
-      name: STORAGE_KEYS.tenantGrades,
+      name: getStorageKeys().tenantGrades,
       version: STORAGE_VERSION,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ tenantGrades: state.tenantGrades }),

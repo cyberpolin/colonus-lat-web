@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import {
-  STORAGE_KEYS,
+  getStorageKeys,
   type UserRole,
   type SyncPolicy,
   type SyncPolicyRole,
@@ -38,7 +38,7 @@ const getPolicyRoleForSession = (
 
 const readCachedPolicy = (role: SyncPolicyRole): SyncPolicy | undefined => {
   if (typeof window === "undefined") return undefined;
-  const raw = window.localStorage.getItem(STORAGE_KEYS.syncPolicyCache);
+  const raw = window.localStorage.getItem(getStorageKeys().syncPolicyCache);
   if (!raw) return undefined;
   try {
     const parsed = JSON.parse(raw) as Partial<Record<SyncPolicyRole, SyncPolicy>>;
@@ -51,7 +51,7 @@ const readCachedPolicy = (role: SyncPolicyRole): SyncPolicy | undefined => {
 
 const writeCachedPolicy = (policy: SyncPolicy): void => {
   if (typeof window === "undefined") return;
-  const raw = window.localStorage.getItem(STORAGE_KEYS.syncPolicyCache);
+  const raw = window.localStorage.getItem(getStorageKeys().syncPolicyCache);
   let parsed: Partial<Record<SyncPolicyRole, SyncPolicy>> = {};
   if (raw) {
     try {
@@ -61,12 +61,12 @@ const writeCachedPolicy = (policy: SyncPolicy): void => {
     }
   }
   parsed[policy.role] = policy;
-  window.localStorage.setItem(STORAGE_KEYS.syncPolicyCache, JSON.stringify(parsed));
+  window.localStorage.setItem(getStorageKeys().syncPolicyCache, JSON.stringify(parsed));
 };
 
 const readSyncMeta = (): SyncMetaState => {
   if (typeof window === "undefined") return { byLandlord: {} };
-  const raw = window.localStorage.getItem(STORAGE_KEYS.syncMeta);
+  const raw = window.localStorage.getItem(getStorageKeys().syncMeta);
   if (!raw) return { byLandlord: {} };
   try {
     const parsed = JSON.parse(raw) as SyncMetaState;
@@ -78,7 +78,7 @@ const readSyncMeta = (): SyncMetaState => {
 
 const writeSyncMeta = (state: SyncMetaState): void => {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEYS.syncMeta, JSON.stringify(state));
+  window.localStorage.setItem(getStorageKeys().syncMeta, JSON.stringify(state));
 };
 
 const mergeUnsyncedOutbox = (
@@ -255,14 +255,13 @@ export const useAutoSnapshotSync = (): void => {
 
   useEffect(() => {
     let mounted = true;
-    const readRaw = (key: string): string =>
-      window.localStorage.getItem(key) ?? "";
+    const readRaw = (key: string): string => window.localStorage.getItem(key) ?? "";
     const getSyncFingerprint = (): string =>
       [
-        readRaw(STORAGE_KEYS.state),
-        readRaw(STORAGE_KEYS.outbox),
-        readRaw(STORAGE_KEYS.changeLog),
-        readRaw(STORAGE_KEYS.tenantGrades)
+        readRaw(getStorageKeys().state),
+        readRaw(getStorageKeys().outbox),
+        readRaw(getStorageKeys().changeLog),
+        readRaw(getStorageKeys().tenantGrades)
       ].join("|");
 
     const applyPolicy = (policy: SyncPolicy): void => {

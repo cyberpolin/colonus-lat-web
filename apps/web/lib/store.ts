@@ -4,8 +4,8 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
   PROOF_IMAGE_PLACEHOLDER_URL,
-  STORAGE_KEYS,
   STORAGE_VERSION,
+  getStorageKeys,
   createId,
   nowIso,
   type CareProofSubmission,
@@ -1645,7 +1645,7 @@ export const useColonusStore = create<ColonusUiState>()(
       };
     },
     {
-      name: STORAGE_KEYS.state,
+      name: getStorageKeys().state,
       version: STORAGE_VERSION,
       storage: createJSONStorage(() => localStorage),
       migrate: (persistedState) => {

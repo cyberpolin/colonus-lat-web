@@ -22,8 +22,8 @@ model User {
   firstTimePasswordToken          String                  @default("")
   firstTimePasswordTokenExpiresAt DateTime?
   welcomeEmailSentAt              DateTime?
-  role                            String                  @default("tenant")
-  status                          String                  @default("active")
+  role                            UserRoleType            @default(tenant)
+  status                          UserStatusType          @default(active)
   propertiesOwned                 Property[]              @relation("Property_landlord")
   memberships                     Membership[]            @relation("Membership_user")
   uploadedAssets                  UploadedAsset[]         @relation("UploadedAsset_landlord")
@@ -54,28 +54,28 @@ model Property {
 }
 
 model Membership {
-  id         String    @id @default(cuid())
-  user       User?     @relation("Membership_user", fields: [userId], references: [id])
-  userId     String?   @map("user")
-  property   Property? @relation("Membership_property", fields: [propertyId], references: [id])
-  propertyId String?   @map("property")
-  role       String    @default("tenant")
-  status     String    @default("active")
-  createdAt  DateTime? @default(now())
-  updatedAt  DateTime? @updatedAt
+  id         String               @id @default(cuid())
+  user       User?                @relation("Membership_user", fields: [userId], references: [id])
+  userId     String?              @map("user")
+  property   Property?            @relation("Membership_property", fields: [propertyId], references: [id])
+  propertyId String?              @map("property")
+  role       MembershipRoleType   @default(tenant)
+  status     MembershipStatusType @default(active)
+  createdAt  DateTime?            @default(now())
+  updatedAt  DateTime?            @updatedAt
 
   @@index([userId])
   @@index([propertyId])
 }
 
 model PropertySubscription {
-  id                 String    @id @default(cuid())
-  property           Property? @relation("Property_subscription")
-  tier               String    @default("free")
-  subscriptionStatus String    @default("trial")
+  id                 String                                     @id @default(cuid())
+  property           Property?                                  @relation("Property_subscription")
+  tier               PropertySubscriptionTierType               @default(free)
+  subscriptionStatus PropertySubscriptionSubscriptionStatusType @default(trial)
   trialEndsAt        DateTime?
-  createdAt          DateTime? @default(now())
-  updatedAt          DateTime? @updatedAt
+  createdAt          DateTime?                                  @default(now())
+  updatedAt          DateTime?                                  @updatedAt
 }
 
 model UploadedAsset {
@@ -98,41 +98,41 @@ model UploadedAsset {
 }
 
 model SyncEvent {
-  id                   String    @id @default(cuid())
-  property             Property? @relation("SyncEvent_property", fields: [propertyId], references: [id])
-  propertyId           String?   @map("property")
-  actor                User?     @relation("SyncEvent_actor", fields: [actorId], references: [id])
-  actorId              String?   @map("actor")
-  kind                 String
-  clientSessionId      String    @default("")
-  clientStorageVersion String    @default("")
-  counts               String?
-  status               String    @default("ok")
-  errorMessage         String    @default("")
-  createdAt            DateTime? @default(now())
-  updatedAt            DateTime? @updatedAt
+  id                   String              @id @default(cuid())
+  property             Property?           @relation("SyncEvent_property", fields: [propertyId], references: [id])
+  propertyId           String?             @map("property")
+  actor                User?               @relation("SyncEvent_actor", fields: [actorId], references: [id])
+  actorId              String?             @map("actor")
+  kind                 SyncEventKindType
+  clientSessionId      String              @default("")
+  clientStorageVersion String              @default("")
+  counts               Json?
+  status               SyncEventStatusType @default(ok)
+  errorMessage         String              @default("")
+  createdAt            DateTime?           @default(now())
+  updatedAt            DateTime?           @updatedAt
 
   @@index([propertyId])
   @@index([actorId])
 }
 
 model SyncPolicy {
-  id                      String    @id @default(cuid())
-  role                    String    @unique
-  enabled                 Boolean   @default(true)
-  mode                    String    @default("after_change")
-  delayAfterChangeSeconds Int?      @default(60)
-  intervalSeconds         Int?      @default(300)
-  retryBackoffSeconds     Int?      @default(60)
-  maxRetryBackoffSeconds  Int?      @default(300)
-  maxJitterSeconds        Int?      @default(0)
-  initialHydrationOnLogin Boolean   @default(true)
-  forceSyncOnLogin        Boolean   @default(false)
-  devShowCountdown        Boolean   @default(true)
-  updatedByUser           User?     @relation("SyncPolicy_updatedByUser", fields: [updatedByUserId], references: [id])
-  updatedByUserId         String?   @map("updatedByUser")
-  createdAt               DateTime? @default(now())
-  updatedAt               DateTime? @updatedAt
+  id                      String             @id @default(cuid())
+  role                    SyncPolicyRoleType @unique
+  enabled                 Boolean            @default(true)
+  mode                    SyncPolicyModeType @default(after_change)
+  delayAfterChangeSeconds Int?               @default(60)
+  intervalSeconds         Int?               @default(300)
+  retryBackoffSeconds     Int?               @default(60)
+  maxRetryBackoffSeconds  Int?               @default(300)
+  maxJitterSeconds        Int?               @default(0)
+  initialHydrationOnLogin Boolean            @default(true)
+  forceSyncOnLogin        Boolean            @default(false)
+  devShowCountdown        Boolean            @default(true)
+  updatedByUser           User?              @relation("SyncPolicy_updatedByUser", fields: [updatedByUserId], references: [id])
+  updatedByUserId         String?            @map("updatedByUser")
+  createdAt               DateTime?          @default(now())
+  updatedAt               DateTime?          @updatedAt
 
   @@index([updatedByUserId])
 }
@@ -155,7 +155,7 @@ model PublicPropertyListing {
   areaSqm          Int?                    @default(0)
   isAvailable      Boolean                 @default(false)
   isOffered        Boolean                 @default(false)
-  photos           String?
+  photos           Json?
   relatedListings  PublicPropertyListing[] @relation("PublicPropertyListing_relatedFrom")
   relatedFrom      PublicPropertyListing[] @relation("PublicPropertyListing_relatedFrom")
   inquiries        RentalInquiry[]         @relation("RentalInquiry_listing")
@@ -166,19 +166,84 @@ model PublicPropertyListing {
 }
 
 model RentalInquiry {
-  id             String                 @id @default(cuid())
-  listing        PublicPropertyListing? @relation("RentalInquiry_listing", fields: [listingId], references: [id])
-  listingId      String?                @map("listing")
-  landlord       User?                  @relation("RentalInquiry_landlord", fields: [landlordId], references: [id])
-  landlordId     String?                @map("landlord")
-  requesterName  String                 @default("")
-  requesterEmail String                 @default("")
-  requesterPhone String                 @default("")
-  message        String                 @default("")
-  status         String                 @default("new")
-  createdAt      DateTime?              @default(now())
-  updatedAt      DateTime?              @updatedAt
+  id             String                  @id @default(cuid())
+  listing        PublicPropertyListing?  @relation("RentalInquiry_listing", fields: [listingId], references: [id])
+  listingId      String?                 @map("listing")
+  landlord       User?                   @relation("RentalInquiry_landlord", fields: [landlordId], references: [id])
+  landlordId     String?                 @map("landlord")
+  requesterName  String                  @default("")
+  requesterEmail String                  @default("")
+  requesterPhone String                  @default("")
+  message        String                  @default("")
+  status         RentalInquiryStatusType @default(new)
+  createdAt      DateTime?               @default(now())
+  updatedAt      DateTime?               @updatedAt
 
   @@index([listingId])
   @@index([landlordId])
+}
+
+enum UserRoleType {
+  superAdmin
+  landlord
+  tenant
+}
+
+enum UserStatusType {
+  active
+  disabled
+}
+
+enum MembershipRoleType {
+  tenant
+  manager
+  owner
+}
+
+enum MembershipStatusType {
+  active
+  invited
+}
+
+enum PropertySubscriptionTierType {
+  free
+  unlimited
+}
+
+enum PropertySubscriptionSubscriptionStatusType {
+  trial
+  active
+  past_due
+  canceled
+}
+
+enum SyncEventKindType {
+  upload_asset
+  backup_db
+  mutation_push
+  mutation_pull
+  quota_blocked
+}
+
+enum SyncEventStatusType {
+  ok
+  error
+}
+
+enum SyncPolicyRoleType {
+  super_admin
+  landlord
+  tenant
+}
+
+enum SyncPolicyModeType {
+  after_change
+  interval
+  hybrid
+}
+
+enum RentalInquiryStatusType {
+  new
+  contacted
+  closed
 }

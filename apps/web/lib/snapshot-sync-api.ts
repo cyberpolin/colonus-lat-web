@@ -1,4 +1,4 @@
-import { STORAGE_KEYS } from "@colonus/shared";
+import { getStorageKeys } from "@colonus/shared";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
 
@@ -60,10 +60,10 @@ const readPersistedState = <T>(key: string, fallback: T): T => {
 };
 
 export const buildLocalSnapshotPayload = (): SnapshotPayload => ({
-  state: readPersistedState<Record<string, unknown>>(STORAGE_KEYS.state, {}),
-  outbox: readJson<Array<Record<string, unknown>>>(STORAGE_KEYS.outbox, []),
-  changeLog: readJson<Array<Record<string, unknown>>>(STORAGE_KEYS.changeLog, []),
-  tenantGrades: readPersistedState<unknown>(STORAGE_KEYS.tenantGrades, [])
+  state: readPersistedState<Record<string, unknown>>(getStorageKeys().state, {}),
+  outbox: readJson<Array<Record<string, unknown>>>(getStorageKeys().outbox, []),
+  changeLog: readJson<Array<Record<string, unknown>>>(getStorageKeys().changeLog, []),
+  tenantGrades: readPersistedState<unknown>(getStorageKeys().tenantGrades, [])
 });
 
 export const uploadSnapshot = async (input: {
