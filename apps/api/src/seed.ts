@@ -47,6 +47,17 @@ interface KeystoneDbContext {
   };
 }
 
+const errorText = (error: unknown): string => {
+  if (!error) return "";
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+};
+
 const SEEDED_LISTING_SLUGS = [
   "seed-property-100-seed-street",
   "seed-property-102-seed-street",
@@ -620,8 +631,19 @@ export const ensureProductionSeed = async (context: KeystoneDbContext): Promise<
         });
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (message.includes("SyncEventKindType") && message.includes("does not exist")) {
+      const message = errorText(error);
+      const debugMessage =
+        typeof error === "object" &&
+        error !== null &&
+        "extensions" in error &&
+        typeof (error as { extensions?: unknown }).extensions === "object" &&
+        (error as { extensions?: { debug?: { message?: unknown } } }).extensions?.debug &&
+        typeof (error as { extensions?: { debug?: { message?: unknown } } }).extensions?.debug
+          ?.message === "string"
+          ? ((error as { extensions: { debug: { message: string } } }).extensions.debug.message)
+          : "";
+      const combined = `${message}\n${debugMessage}`;
+      if (combined.includes("SyncEventKindType") && combined.includes("does not exist")) {
         console.warn(
           "[seed] Skipping production SyncEvent seed because DB enum types are not available yet."
         );
