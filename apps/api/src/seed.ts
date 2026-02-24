@@ -509,31 +509,36 @@ export const ensureProductionSeed = async (context: KeystoneDbContext): Promise<
   const listings = await sudoContext.db.PublicPropertyListing.findMany({
     query: "id slug sourcePropertyId"
   });
-  const listingExists = listings.some(
+  const existingListing = listings.find(
     (listing) =>
       listing.slug === listingSlug || listing.sourcePropertyId === listingSourcePropertyId
   );
+  const listingData: Record<string, unknown> = {
+    sourcePropertyId: listingSourcePropertyId,
+    slug: listingSlug,
+    propertyName: "Departamento Centro",
+    address: "Av. Reforma 245, Centro",
+    unitCode: "D-302",
+    headline: "Departamento Amueblado en el Centro",
+    description:
+      "Unidad de ejemplo con dos recamaras, balcon y buena iluminacion. Ideal para renta inmediata.",
+    monthlyRentCents: 145000,
+    currency: "USD",
+    bedrooms: 2,
+    bathrooms: 2,
+    areaSqm: 78,
+    isAvailable: true,
+    isOffered: true,
+    photos: seededPhotosForListing(demoImageUrls, 9001)
+  };
 
-  if (listingExists) return;
+  if (existingListing?.id) {
+    await sudoContext.db.PublicPropertyListing.updateOne({
+      where: { id: existingListing.id },
+      data: listingData
+    });
+    return;
+  }
 
-  await sudoContext.db.PublicPropertyListing.createOne({
-    data: {
-      sourcePropertyId: listingSourcePropertyId,
-      slug: listingSlug,
-      propertyName: "Departamento Centro",
-      address: "Av. Reforma 245, Centro",
-      unitCode: "D-302",
-      headline: "Departamento Amueblado en el Centro",
-      description:
-        "Unidad de ejemplo con dos recamaras, balcon y buena iluminacion. Ideal para renta inmediata.",
-      monthlyRentCents: 145000,
-      currency: "USD",
-      bedrooms: 2,
-      bathrooms: 2,
-      areaSqm: 78,
-      isAvailable: true,
-      isOffered: true,
-      photos: seededPhotosForListing(demoImageUrls, 9001)
-    }
-  });
+  await sudoContext.db.PublicPropertyListing.createOne({ data: listingData });
 };
