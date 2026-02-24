@@ -5,8 +5,8 @@
   "scripts": {
     "postinstall": "node ./scripts/fix-keystone-static.cjs",
     "dev": "keystone dev --config keystone.ts",
-    "build": "keystone build --config keystone.ts",
-    "start": "keystone start --config keystone.ts",
+    "build": "prisma generate --schema=schema.prisma && keystone build --config keystone.ts",
+    "start": "prisma generate --schema=schema.prisma && keystone start --config keystone.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
