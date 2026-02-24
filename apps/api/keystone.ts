@@ -10,10 +10,17 @@ import { lists } from "./src/schema";
 import { ensureInitialSeed } from "./src/seed";
 
 const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
-const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
 const isDevMode = process.env.NODE_ENV === "development";
 const fallbackDatabaseUrl = "postgresql://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable";
 const databaseUrl = process.env.DATABASE_URL ?? (isDevMode ? fallbackDatabaseUrl : undefined);
+const allowedWebOrigins = (
+  process.env.WEB_ORIGINS ??
+  process.env.WEB_ORIGIN ??
+  "http://localhost:3000"
+)
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 
 if (!databaseUrl) {
   throw new Error("DATABASE_URL is required when NODE_ENV is not development.");
@@ -33,7 +40,12 @@ export default config({
     port,
     extendExpressApp: (app) => {
       app.use((req: Request, res: Response, next: NextFunction) => {
-        res.header("Access-Control-Allow-Origin", webOrigin);
+        const origin = req.headers.origin;
+        if (!origin) {
+          res.header("Access-Control-Allow-Origin", allowedWebOrigins[0] ?? "http://localhost:3000");
+        } else if (allowedWebOrigins.includes(origin)) {
+          res.header("Access-Control-Allow-Origin", origin);
+        }
         res.header("Vary", "Origin");
         res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
         res.header(
@@ -41,6 +53,10 @@ export default config({
           "Content-Type, Authorization, X-Requested-With"
         );
         if (req.method === "OPTIONS") {
+          if (origin && !allowedWebOrigins.includes(origin)) {
+            res.status(403).json({ error: "Origin not allowed." });
+            return;
+          }
           res.status(204).end();
           return;
         }
