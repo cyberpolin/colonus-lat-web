@@ -7,7 +7,7 @@ import { addSyncPolicyRoutes } from "./src/routes/sync-policy";
 import { addSnapshotSyncRoutes } from "./src/routes/snapshot-sync";
 import { addUploadRoutes } from "./src/routes/upload";
 import { lists } from "./src/schema";
-import { ensureInitialSeed } from "./src/seed";
+import { ensureInitialSeed, ensureProductionSeed } from "./src/seed";
 
 const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
 const isDevMode = process.env.NODE_ENV === "development";
@@ -31,8 +31,11 @@ export default config({
     provider: "postgresql",
     url: databaseUrl,
     onConnect: async (context) => {
-      if (!isDevMode) return;
-      await ensureInitialSeed(context as unknown as Parameters<typeof ensureInitialSeed>[0]);
+      if (isDevMode) {
+        await ensureInitialSeed(context as unknown as Parameters<typeof ensureInitialSeed>[0]);
+        return;
+      }
+      await ensureProductionSeed(context as unknown as Parameters<typeof ensureProductionSeed>[0]);
     }
   },
   lists,

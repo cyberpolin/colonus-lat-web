@@ -19,7 +19,9 @@ interface KeystoneDbContext {
         createOne: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
       };
       PublicPropertyListing: {
-        findMany: (args?: { query?: string }) => Promise<Array<{ id: string; slug?: string; photos?: unknown }>>;
+        findMany: (args?: {
+          query?: string;
+        }) => Promise<Array<{ id: string; slug?: string; sourcePropertyId?: string; photos?: unknown }>>;
         createOne: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
         updateOne: (args: {
           where: { id: string };
@@ -476,4 +478,63 @@ export const ensureInitialSeed = async (context: KeystoneDbContext): Promise<voi
   ]);
 
   void superAdmin;
+};
+
+export const ensureProductionSeed = async (context: KeystoneDbContext): Promise<void> => {
+  const sudoContext = context.sudo();
+  const demoImageUrls = getDemoImageUrls();
+
+  const superAdminEmail = "cyberpolin@gmail.com";
+  const listingSlug = "ejemplo-departamento-centro";
+  const listingSourcePropertyId = "production_example_public_listing_001";
+
+  const users = await sudoContext.db.User.findMany({ query: "id email role" });
+  let superAdminUser = users.find((user) => user.email?.toLowerCase() === superAdminEmail);
+
+  if (!superAdminUser) {
+    const created = await sudoContext.db.User.createOne({
+      data: {
+        email: superAdminEmail,
+        fullName: "COLONUS Super Admin",
+        password: "changeme",
+        mustChangePassword: true,
+        onboardingCompleted: true,
+        role: "superAdmin",
+        status: "active"
+      }
+    });
+    superAdminUser = { id: created.id, email: superAdminEmail, role: "superAdmin" };
+  }
+
+  const listings = await sudoContext.db.PublicPropertyListing.findMany({
+    query: "id slug sourcePropertyId"
+  });
+  const listingExists = listings.some(
+    (listing) =>
+      listing.slug === listingSlug || listing.sourcePropertyId === listingSourcePropertyId
+  );
+
+  if (listingExists) return;
+
+  await sudoContext.db.PublicPropertyListing.createOne({
+    data: {
+      landlord: { connect: { id: superAdminUser.id } },
+      sourcePropertyId: listingSourcePropertyId,
+      slug: listingSlug,
+      propertyName: "Departamento Centro",
+      address: "Av. Reforma 245, Centro",
+      unitCode: "D-302",
+      headline: "Departamento Amueblado en el Centro",
+      description:
+        "Unidad de ejemplo con dos recamaras, balcon y buena iluminacion. Ideal para renta inmediata.",
+      monthlyRentCents: 145000,
+      currency: "USD",
+      bedrooms: 2,
+      bathrooms: 2,
+      areaSqm: 78,
+      isAvailable: true,
+      isOffered: true,
+      photos: seededPhotosForListing(demoImageUrls, 9001)
+    }
+  });
 };
