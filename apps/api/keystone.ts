@@ -11,6 +11,7 @@ import { ensureInitialSeed } from "./src/seed";
 
 const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
+const isDevMode = process.env.NODE_ENV === "development";
 const databaseUrl =
   process.env.DATABASE_URL ??
   "postgresql://<user>:<password>@<host>:5432/<database>?sslmode=require";
@@ -20,6 +21,7 @@ export default config({
     provider: "postgresql",
     url: databaseUrl,
     onConnect: async (context) => {
+      if (!isDevMode) return;
       await ensureInitialSeed(context as unknown as Parameters<typeof ensureInitialSeed>[0]);
     }
   },
